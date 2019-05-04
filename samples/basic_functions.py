@@ -5,7 +5,8 @@ import spotipy.util as util
 scope = 'user-read-currently-playing user-read-playback-state'
 
 def curr_song(sp):
-  print sp.currently_playing()["item"]["name"]
+  if (type(sp)):
+    print sp.currently_playing()["item"]["name"]
 
 def devices(sp):
   for device in sp.devices()["devices"]:
