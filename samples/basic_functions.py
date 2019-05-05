@@ -14,6 +14,7 @@ scope = 'user-read-currently-playing user-read-playback-state'
 #   for device in sp.devices()["devices"]:
 #     print device["name"]
 
+
 # REQUIRES: sp = spotify object, query = search text, 
 #           filter_explicit = do not display explicit songs.
 # EFFECTS:  Prints a title/artist list of the top 10 results corresponding 
@@ -49,6 +50,25 @@ def search_song(sp, query, filter_explicit=1):
     print str(i) + ". " + track
     i += 1
 
+# REQUIRES: sp = spotify object, uri = Spotify URI of track
+# EFFECTS:  Prints the title/artist corresponding to the URI
+def search_uri(sp, uri):
+  sp_track = sp.track(uri)
+  track = ""
+
+  title = sp_track["name"]
+  artists = ""
+
+  artist_list = sp_track["artists"]
+  for i in range(0, len(artist_list)):
+    artists += artist_list[i]["name"]
+    if (i != len(artist_list) - 1):
+      artists += ", "
+
+  track += title + " by " + artists
+
+  print track
+
 
 def main():
   if len(sys.argv) > 1:
@@ -64,8 +84,12 @@ def main():
     # curr_song(sp)
     # devices(sp)
 
-    query = "Up Now"
-    search_song(sp, query, 0)
+    query = raw_input("Enter query: ")
+
+    if (query[0:14] == "spotify:track:"):
+      search_uri(sp, query)
+    else:
+      search_song(sp, query, 1)
 
   else:
     print "Can't get token for", username
