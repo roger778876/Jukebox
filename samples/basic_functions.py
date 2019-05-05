@@ -89,7 +89,7 @@ def main():
     if (query[0:14] == "spotify:track:"):
       search_uri(sp, query)
     else:
-      search_song(sp, query, 1)
+      search_song(sp, query, 0) # TODO set back to 1 to turn on filter_explicit
 
   else:
     print "Can't get token for", username

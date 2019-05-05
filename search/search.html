@@ -3,6 +3,8 @@
   <head>
     <title>Spotify searchbox</title>
 
+    
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
     <script src="search.js" async></script>
   </head>
 
@@ -11,14 +13,18 @@
       <h1>Search for a song title here</h1>
 
       <form id="searchbox">
-        <input type="text" id="request" placeholder="enter song title here"/>
+        <input type="text" id="querybox" placeholder="enter song title here"/>
         <input type="submit" id="searchbtn" value="Search"/>
       </form>
     </div>
 
     <div id="resultsdiv">
       <h2>Results:</h2>
+      <p id="resultsp">placeholder</p>
     </div>
+
+
+
   </body>
 
 </html>
