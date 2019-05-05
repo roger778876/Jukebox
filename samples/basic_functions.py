@@ -1,16 +1,54 @@
 import sys
 import spotipy
 import spotipy.util as util
+from collections import OrderedDict # for search_song(), when removing duplicates
+# from track_list
 
 scope = 'user-read-currently-playing user-read-playback-state'
 
-def curr_song(sp):
-  if (type(sp)):
-    print sp.currently_playing()["item"]["name"]
+# def curr_song(sp):
+#   if (type(sp)):
+#     print sp.currently_playing()["item"]["name"]
 
-def devices(sp):
-  for device in sp.devices()["devices"]:
-    print device["name"]
+# def devices(sp):
+#   for device in sp.devices()["devices"]:
+#     print device["name"]
+
+# REQUIRES: sp = spotify object, query = search text, 
+#           filter_explicit = do not display explicit songs.
+# EFFECTS:  Prints a title/artist list of the top 10 results corresponding 
+#           to the search query.
+#           Calls the search() function from spotipy.
+def search_song(sp, query, filter_explicit=1):
+  # returns a dict of the search results; index by ["tracks"]["items"] to get
+  # to a list of "limit" amount of tracks
+  sp_results = sp.search(q=query, limit=10, offset=0, type="track")
+  track_list = []
+
+  for result in sp_results["tracks"]["items"]:
+    is_explicit = result["explicit"]
+    if (not(filter_explicit and is_explicit)):
+      title = result["name"]
+      artists = ""
+
+      artist_list = result["artists"]
+      for i in range(0, len(artist_list)):
+        artists += artist_list[i]["name"]
+        if (i != len(artist_list) - 1):
+          artists += ", "
+
+      track_list.append(title + " by " + artists)
+
+    else:
+      track_list.append("track is explicit")
+
+  # removes duplicates from the track_list
+  track_list = list(OrderedDict.fromkeys(track_list))
+  i = 1
+  for track in track_list:
+    print str(i) + ". " + track
+    i += 1
+
 
 def main():
   if len(sys.argv) > 1:
@@ -23,12 +61,14 @@ def main():
 
   if token:
     sp = spotipy.Spotify(auth=token)
-    curr_song(sp)
-    devices(sp)
+    # curr_song(sp)
+    # devices(sp)
+
+    query = "Up Now"
+    search_song(sp, query, 0)
 
   else:
     print "Can't get token for", username
-
 
 
 main()
