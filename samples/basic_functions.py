@@ -4,7 +4,7 @@ import spotipy.util as util
 from collections import OrderedDict # for search_song(), when removing duplicates
 # from track_list
 
-scope = 'user-read-currently-playing user-read-playback-state'
+scope = 'user-read-currently-playing user-read-playback-state user-modify-playback-state'
 
 # def curr_song(sp):
 #   if (type(sp)):
@@ -20,6 +20,8 @@ scope = 'user-read-currently-playing user-read-playback-state'
 # EFFECTS:  Prints a title/artist list of the top 10 results corresponding 
 #           to the search query.
 #           Calls the search() function from spotipy.
+#           Filters out explicit songs if requested.
+#           Asks user to choose song from list, then plays it.
 def search_song(sp, query, filter_explicit=1):
   # returns a dict of the search results; index by ["tracks"]["items"] to get
   # to a list of "limit" amount of tracks
@@ -38,20 +40,38 @@ def search_song(sp, query, filter_explicit=1):
         if (i != len(artist_list) - 1):
           artists += ", "
 
-      track_list.append(title + " by " + artists)
+      # TODO make it add a tuple to track_list, not just add the URI
+      # to the end of the string
+      song_uri = result["uri"]
+
+      track_list.append(title + " by " + artists + " (" + song_uri + ")")
 
     else:
       track_list.append("track is explicit")
 
   # removes duplicates from the track_list
   track_list = list(OrderedDict.fromkeys(track_list))
-  i = 1
+  i = 0
   for track in track_list:
-    print str(i) + ". " + track
     i += 1
+    print str(i) + ". " + track
 
-# REQUIRES: sp = spotify object, uri = Spotify URI of track
-# EFFECTS:  Prints the title/artist corresponding to the URI
+  # return early if there's no results
+  if (i == 0):
+    print "No results found."
+    return
+
+  # ask user to choose a song, then plays it
+  choice = int(raw_input("Choose a song: "))
+  if (choice < 1 or choice > i):
+    print "Invalid choice!"
+  else:
+    uri = track_list[choice - 1][-37:-1]
+    play_song(sp, uri)
+
+
+# REQUIRES: sp = spotify object, uri = Spotify URI of track.
+# EFFECTS:  Prints the title/artist corresponding to the URI.
 def search_uri(sp, uri):
   sp_track = sp.track(uri)
   track = ""
@@ -68,6 +88,36 @@ def search_uri(sp, uri):
   track += title + " by " + artists
 
   print track
+
+
+def get_title_artist(sp, uri):
+  sp_track = sp.track(uri)
+  title_artist = ""
+
+  title = sp_track["name"]
+  artists = ""
+
+  artist_list = sp_track["artists"]
+  for i in range(0, len(artist_list)):
+    artists += artist_list[i]["name"]
+    if (i != len(artist_list) - 1):
+      artists += ", "
+
+  title_artist += title + " by " + artists
+  return title_artist
+
+
+# REQUIRES: sp = spotify object, uri = Spotify URI of track.
+# EFFECTS: If there is an active device, plays the song to that device.
+def play_song(sp, uri):
+  device_list = sp.devices()
+  if (len(device_list["devices"]) == 0):
+    print "No active devices!"
+  else:
+    uri_to_list = [uri]
+    sp.start_playback(uris=uri_to_list)
+
+    print "Playing " + get_title_artist(sp, uri)
 
 
 def main():
@@ -87,7 +137,8 @@ def main():
     query = raw_input("Enter query: ")
 
     if (query[0:14] == "spotify:track:"):
-      search_uri(sp, query)
+      # search_uri(sp, query)
+      play_song(sp, query)
     else:
       search_song(sp, query, 0) # TODO set back to 1 to turn on filter_explicit
 
